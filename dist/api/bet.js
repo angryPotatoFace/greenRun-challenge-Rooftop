@@ -52,7 +52,7 @@ const updateStatus = (id, status) => __awaiter(void 0, void 0, void 0, function*
         let data;
         const old = yield Bet_2.Bet.findOneBy({ id });
         if (status === 'cancelled' && old.status === 'settled') {
-            throw Error("You cannot cancelled a settled Bet");
+            throw "You cannot cancelled a settled Bet";
         }
         data = yield Bet_2.Bet.update(id, { status });
         return data;
@@ -95,7 +95,7 @@ const handlerUserBet = (event_id, bet_option, data) => __awaiter(void 0, void 0,
         const bet = yield (0, exports.getOneBetWhere)(event_id, bet_option);
         if (!bet || bet.status !== Bet_1.Bet_Status.ACTIVE)
             throw errors_1.ERR_BET_UNAVAIBLE;
-        const { user_id, amount } = data;
+        const { user_id, amount, category, status } = data;
         const { id, odd } = bet;
         const userBet = yield (0, user_bet_1.insertUserBet)({
             user_id,
@@ -104,8 +104,15 @@ const handlerUserBet = (event_id, bet_option, data) => __awaiter(void 0, void 0,
             amount,
             state: UserBet_1.BetUser_State.OPEN,
         });
-        data.user_bet_id = userBet.identifiers[0].id;
-        return yield (0, transaction_1.insertNewTransaction)(data);
+        const user_bet_id = userBet.identifiers[0].id;
+        const transaction = {
+            user_id,
+            amount,
+            category,
+            status: UserBet_1.BetUser_State.OPEN,
+            user_bet_id,
+        };
+        return yield (0, transaction_1.insertNewTransaction)(transaction);
     }
     catch (err) {
         throw err;

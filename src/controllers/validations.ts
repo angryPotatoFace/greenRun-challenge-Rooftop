@@ -4,7 +4,7 @@ import { Bet_Status } from "../constants/Bet";
 
 export const isValidStatus = ( status: string ) => {
     if( !( status === Bet_Status.ACTIVE || status === Bet_Status.CANCELLED ) ) { 
-        throw Error(ERROR_CATEGORY);
+        throw ERROR_CATEGORY;
     }
 }   
 

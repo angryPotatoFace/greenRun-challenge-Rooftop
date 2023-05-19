@@ -3,15 +3,16 @@ import { IRequestUser, IRequestTransactions, ITransaction, IRequestBet} from '..
 import { Categories } from '../constants/Transaciton'
 import { userSchema, userSchemaID } from '../models/schemas/userSchema';
 import { insertUser, findAllUsers, findUserBy, updateDataUser, deleteUserByID, blockAUser, isAdmintrator } from '../api/user';
-import { betSchema, transactionSchema } from '../models/schemas/transaction';
+import { userBetSchema, transactionSchema } from '../models/schemas/transaction';
 import { getAmountByTransaccions, getTransactionsByUserID, haveEnoughtMoney, insertNewTransaction } from '../api/transaction';
 import { handlerUserBet } from '../api/bet';
-import { ERROR_CANNOT_USER, ERR_ID } from '../constants/errors';
+import { ERROR_CANNOT_USER, ERROR_NO_MONEY, ERR_ID } from '../constants/errors';
 import * as log4js from "log4js";
 import { Bet_Status } from '../constants/Bet';
 import { handlerError } from '../helpers/handlerError';
 import { Roles } from '../constants/User';
 import { areMe } from './validations';
+import { doAbetSchema } from '../models/schemas/bet';
 const logger = log4js.getLogger("[ User Controller ]");
 logger.level = "debug"
 
@@ -96,6 +97,8 @@ export const depositUser = async (req: IRequestTransactions, h: ResponseToolkit)
 
     const data: ITransaction = req.payload;
     data.category = Categories.DEPOSIT;
+    data.status = "open"
+    data.user_id = req.pre.auth.user.id;
     
     try{
         await transactionSchema.validateAsync(data);
@@ -109,6 +112,9 @@ export const depositUser = async (req: IRequestTransactions, h: ResponseToolkit)
 export const withDrawUser = async (req: IRequestTransactions, h: ResponseToolkit) => {
     const data: ITransaction = req.payload;
     data.category = Categories.WITHDRAW
+    data.status = "open"
+    data.user_id = req.pre.auth.user.id;
+
 
     try{
         await transactionSchema.validateAsync(data);
@@ -122,27 +128,41 @@ export const withDrawUser = async (req: IRequestTransactions, h: ResponseToolkit
 
 export const betEvent = async (req: IRequestBet, h: ResponseToolkit) => {
 
-    const { event_id, bet_option } = req.payload.bet;
-    const data: ITransaction = req.payload.transaction;
-    
-    data.category = Categories.BET;
-    data.status = Bet_Status.ACTIVE;
+    const bets = req.payload.bets;
 
-    try {
-        await betSchema.validateAsync(data);
-        await haveEnoughtMoney(data);
 
-        return  await handlerUserBet( event_id, bet_option, data);;
+    const result = bets.map( async( bet ) => {
 
-    }catch(err){ 
-        logger.error(err);
-        return handlerError(err, h);
-     }
+        const { event_id, bet_option } = bet;
+        const data: ITransaction = bet;
+        data.user_id = req.pre.auth.user.id;
+        data.category = Categories.BET;    
+        try{
+            await doAbetSchema.validateAsync(data);
+            const amount = await haveEnoughtMoney(data);
+
+            if( amount - bet.amount >= 0 ) {
+                return await handlerUserBet( event_id, bet_option, data);
+            }else {
+                return ERROR_NO_MONEY
+            }
+        }catch(err){ 
+            logger.error(err);
+            return err;
+        }
+    })
+
+    return result;
+   
+
+
+  
 }
 
 
 export const getTransacions = async (req: IRequestUser, h: ResponseToolkit) => {
-    const {id, filters} = req.params;
+    const { filters } = req.query;
+    const id = req.query.user_id;
 
     try{
         if(!id) throw ERR_ID;
@@ -161,7 +181,8 @@ export const getTransacions = async (req: IRequestUser, h: ResponseToolkit) => {
 
 
 export const getBalance = async (req: Request, h: ResponseToolkit) => {
-    const { user_id } = req.params;
+    const user_id  = req.pre.auth.user.id;
+
     try{
         const amount = await getAmountByTransaccions(user_id)
         return `The balance about your account is ${amount}$ `

@@ -4,11 +4,12 @@ import { getBetWhere, updateStatus, updateResultOfBet } from '../api/bet';
 import * as log4js from "log4js";
 import { IChangeBetStatus, ICreateBet } from '../constants/interfaces';
 import { isValidStatus } from './validations';
+import { handlerError } from '../helpers/handlerError';
 
 const logger = log4js.getLogger("[ Bet Controller ]");
 logger.level = "debug"
 
-export const getBets = async (req: Request, res: ResponseToolkit) => {
+export const getBets = async (req: Request, h: ResponseToolkit) => {
 
     const event_id = req.query.event_id
     const sport = req.query.sport
@@ -17,12 +18,12 @@ export const getBets = async (req: Request, res: ResponseToolkit) => {
         return await getBetWhere(event_id, sport)
     }catch( err) {
         logger.error(err);
-        return err;
+        return handlerError(err, h);
     }
 
 }
 
-export const getBet = async (req: Request, res: ResponseToolkit) => {
+export const getBet = async (req: Request, h: ResponseToolkit) => {
 
     try {
         const data = await Bet.findOneBy({
@@ -31,25 +32,27 @@ export const getBet = async (req: Request, res: ResponseToolkit) => {
         return data;
     }catch( err ){
         logger.error(err);
-        return err;   
+        return handlerError(err, h);
     }
    
 }
 
-export const createBet = async (req: ICreateBet, res: ResponseToolkit) => {
+export const createBet = async (req: ICreateBet, h: ResponseToolkit) => {
     const data = req.payload;
+    data.result = "open";
+
     try{
         const newBet = await Bet.insert(data);
         return newBet;
     }catch( err ){
         logger.error(err);
-        return err;
+        return handlerError(err, h);
     }
 
 }
 
 
-export const changeStatus = async ( req: IChangeBetStatus, res: ResponseToolkit) => {
+export const changeStatus = async ( req: IChangeBetStatus, h: ResponseToolkit) => {
     const { id, status } = req.payload;
 
     try {
@@ -58,11 +61,11 @@ export const changeStatus = async ( req: IChangeBetStatus, res: ResponseToolkit)
         return data;  
     }catch( err){
         logger.error(err);
-        return err;
+        return handlerError(err, h);
     }
 }
 
-export const uploadResult = async (req: Request, res: ResponseToolkit) => {
+export const uploadResult = async (req: Request, h: ResponseToolkit) => {
 
     const { event_id, bet_option, result }:any = req.payload;
 
@@ -71,7 +74,7 @@ export const uploadResult = async (req: Request, res: ResponseToolkit) => {
         return data;
     }catch( err ) {
         logger.error(err);
-        return err;
+        return handlerError(err, h);
     }
 
 }

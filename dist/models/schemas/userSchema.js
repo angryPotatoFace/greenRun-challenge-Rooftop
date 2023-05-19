@@ -24,11 +24,9 @@ exports.userSchema = joi_1.default.object({
 });
 exports.userSchemaID = joi_1.default.object({
     id: joi_1.default.string().required(),
-    role: joi_1.default.string().required().valid('user', 'administrator'),
     firstName: joi_1.default.string().required().regex(RegExp("^[a-zA-Z]+$")),
     lastName: joi_1.default.string().required(),
     phone: joi_1.default.string().required(),
-    email: joi_1.default.string().email({ minDomainSegments: 2, tlds: { allow: false } }).required(),
     username: joi_1.default.string().required(),
     address: joi_1.default.string().required(),
     gender: joi_1.default.string().required(),
@@ -37,5 +35,4 @@ exports.userSchemaID = joi_1.default.object({
     city: joi_1.default.string().required(),
     category: joi_1.default.string().required(),
     document_id: joi_1.default.string().required(),
-    user_state: joi_1.default.string().required().valid('allow', 'block'),
 });

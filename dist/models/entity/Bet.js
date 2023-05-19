@@ -42,7 +42,7 @@ __decorate([
     __metadata("design:type", Object)
 ], Bet.prototype, "odd", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'enum', enum: ['won', 'lost'] }),
+    (0, typeorm_1.Column)({ type: 'enum', enum: ['won', 'lost', 'open'] }),
     __metadata("design:type", Object)
 ], Bet.prototype, "result", void 0);
 __decorate([

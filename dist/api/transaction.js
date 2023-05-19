@@ -47,12 +47,19 @@ exports.getTransactionsByType = getTransactionsByType;
 const getTransactionsBy = (user_id, category) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let data;
-        if (!user_id && !category)
-            data = yield Transaction_1.Transaction.find();
-        if (user_id)
+        if (category && user_id) {
             data = yield Transaction_1.Transaction.findBy({ user_id });
-        if (category)
-            data = yield Transaction_1.Transaction.findBy({ category });
+            data = data.filter(t => t.category === category);
+        }
+        else if (user_id) {
+            data = yield Transaction_1.Transaction.findBy({ user_id });
+        }
+        else if (category) {
+            yield Transaction_1.Transaction.findBy({ category });
+        }
+        else {
+            data = yield Transaction_1.Transaction.find();
+        }
         return data;
     }
     catch (error) {

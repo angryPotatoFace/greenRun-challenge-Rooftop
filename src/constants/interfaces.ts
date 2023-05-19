@@ -74,17 +74,18 @@ export interface IChangeBetStatus extends Request {
 
 export interface IRequestBet extends Request {
     payload:{
-        bet: {
-            event_id: number
-            bet_option: number
-        },
-        transaction: {
-            user_id: string, 
-            amount: number,
-            category: string,
-            status: string, 
-            user_bet_id?: number
-        }
+        bets: [
+            {
+                event_id: number
+                bet_option: number
+                user_id: string, 
+                amount: number,
+                category: string,
+                status: string, 
+                user_bet_id?: number
+            }
+        ]
+           
     }
 }
 

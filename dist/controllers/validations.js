@@ -5,7 +5,7 @@ const errors_1 = require("../constants/errors");
 const Bet_1 = require("../constants/Bet");
 const isValidStatus = (status) => {
     if (!(status === Bet_1.Bet_Status.ACTIVE || status === Bet_1.Bet_Status.CANCELLED)) {
-        throw Error(errors_1.ERROR_CATEGORY);
+        throw errors_1.ERROR_CATEGORY;
     }
 };
 exports.isValidStatus = isValidStatus;

@@ -38,11 +38,16 @@ export const getTransactionsBy = async ( user_id?: string , category?: string) =
     try {
         let data ;
 
-        if( !user_id && !category ) data = await Transaction.find()
-
-        if( user_id ) data = await Transaction.findBy({ user_id})
-        
-        if( category ) data = await Transaction.findBy({ category})
+        if( category && user_id ){
+            data = await Transaction.findBy({ user_id})
+            data = data.filter( t => t.category === category ); 
+        }else if( user_id ) {
+            data = await Transaction.findBy({ user_id})
+        }else if ( category ) {
+            await Transaction.findBy({ category})
+        }else {
+            data = await Transaction.find()
+        }
 
         return data;
     } catch (error) {

@@ -48,7 +48,7 @@ export const updateStatus = async(id: number, status: string ) => {
         const old = await Bet.findOneBy({ id });
 
         if( status === 'cancelled' && old!.status === 'settled' ) {
-            throw Error("You cannot cancelled a settled Bet");
+            throw "You cannot cancelled a settled Bet";
         }
 
         data = await Bet.update(id, { status });
@@ -105,7 +105,7 @@ export const handlerUserBet = async(event_id: number, bet_option:number, data:IT
         
         if( !bet || bet.status !== Bet_Status.ACTIVE ) throw ERR_BET_UNAVAIBLE
 
-        const { user_id, amount} = data
+        const { user_id, amount, category, status} = data
         const { id, odd } = bet;
 
         const userBet = await insertUserBet({
@@ -116,9 +116,17 @@ export const handlerUserBet = async(event_id: number, bet_option:number, data:IT
             state: BetUser_State.OPEN ,
         })    
 
-        data.user_bet_id = userBet.identifiers[0].id;
+        const user_bet_id = userBet.identifiers[0].id;
+
+        const transaction ={
+            user_id,
+            amount,
+            category,
+            status: BetUser_State.OPEN,
+            user_bet_id,
+        }
         
-        return await insertNewTransaction(data);
+        return await insertNewTransaction(transaction);
     }catch( err ){
         throw err
     }

@@ -37,9 +37,10 @@ const Bet_1 = require("../models/entity/Bet");
 const bet_1 = require("../api/bet");
 const log4js = __importStar(require("log4js"));
 const validations_1 = require("./validations");
+const handlerError_1 = require("../helpers/handlerError");
 const logger = log4js.getLogger("[ Bet Controller ]");
 logger.level = "debug";
-const getBets = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getBets = (req, h) => __awaiter(void 0, void 0, void 0, function* () {
     const event_id = req.query.event_id;
     const sport = req.query.sport;
     try {
@@ -47,11 +48,11 @@ const getBets = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     catch (err) {
         logger.error(err);
-        return err;
+        return (0, handlerError_1.handlerError)(err, h);
     }
 });
 exports.getBets = getBets;
-const getBet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getBet = (req, h) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const data = yield Bet_1.Bet.findOneBy({
             id: req.params.id,
@@ -60,23 +61,24 @@ const getBet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     catch (err) {
         logger.error(err);
-        return err;
+        return (0, handlerError_1.handlerError)(err, h);
     }
 });
 exports.getBet = getBet;
-const createBet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createBet = (req, h) => __awaiter(void 0, void 0, void 0, function* () {
     const data = req.payload;
+    data.result = "open";
     try {
         const newBet = yield Bet_1.Bet.insert(data);
         return newBet;
     }
     catch (err) {
         logger.error(err);
-        return err;
+        return (0, handlerError_1.handlerError)(err, h);
     }
 });
 exports.createBet = createBet;
-const changeStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const changeStatus = (req, h) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, status } = req.payload;
     try {
         (0, validations_1.isValidStatus)(status);
@@ -85,11 +87,11 @@ const changeStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
     catch (err) {
         logger.error(err);
-        return err;
+        return (0, handlerError_1.handlerError)(err, h);
     }
 });
 exports.changeStatus = changeStatus;
-const uploadResult = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const uploadResult = (req, h) => __awaiter(void 0, void 0, void 0, function* () {
     const { event_id, bet_option, result } = req.payload;
     try {
         const data = yield (0, bet_1.updateResultOfBet)(event_id, bet_option, result);
@@ -97,7 +99,7 @@ const uploadResult = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
     catch (err) {
         logger.error(err);
-        return err;
+        return (0, handlerError_1.handlerError)(err, h);
     }
 });
 exports.uploadResult = uploadResult;

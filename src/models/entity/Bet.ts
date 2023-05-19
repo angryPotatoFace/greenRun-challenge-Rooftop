@@ -24,7 +24,7 @@ export class Bet extends BaseEntity {
     @Column({ type: 'double', nullable: true })
     odd: number | undefined
 
-    @Column({ type: 'enum', enum: ['won','lost'] })
+    @Column({ type: 'enum', enum: ['won','lost','open'] })
     result: string | undefined
 
     @CreateDateColumn({ type: Date})

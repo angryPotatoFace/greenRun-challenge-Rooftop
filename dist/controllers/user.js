@@ -41,9 +41,9 @@ const transaction_2 = require("../api/transaction");
 const bet_1 = require("../api/bet");
 const errors_1 = require("../constants/errors");
 const log4js = __importStar(require("log4js"));
-const Bet_1 = require("../constants/Bet");
 const handlerError_1 = require("../helpers/handlerError");
 const validations_1 = require("./validations");
+const bet_2 = require("../models/schemas/bet");
 const logger = log4js.getLogger("[ User Controller ]");
 logger.level = "debug";
 const createUser = (req, h) => __awaiter(void 0, void 0, void 0, function* () {
@@ -124,6 +124,8 @@ exports.deleteUser = deleteUser;
 const depositUser = (req, h) => __awaiter(void 0, void 0, void 0, function* () {
     const data = req.payload;
     data.category = Transaciton_1.Categories.DEPOSIT;
+    data.status = "open";
+    data.user_id = req.pre.auth.user.id;
     try {
         yield transaction_1.transactionSchema.validateAsync(data);
         return (0, transaction_2.insertNewTransaction)(data);
@@ -137,6 +139,8 @@ exports.depositUser = depositUser;
 const withDrawUser = (req, h) => __awaiter(void 0, void 0, void 0, function* () {
     const data = req.payload;
     data.category = Transaciton_1.Categories.WITHDRAW;
+    data.status = "open";
+    data.user_id = req.pre.auth.user.id;
     try {
         yield transaction_1.transactionSchema.validateAsync(data);
         yield (0, transaction_2.haveEnoughtMoney)(data);
@@ -149,24 +153,33 @@ const withDrawUser = (req, h) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.withDrawUser = withDrawUser;
 const betEvent = (req, h) => __awaiter(void 0, void 0, void 0, function* () {
-    const { event_id, bet_option } = req.payload.bet;
-    const data = req.payload.transaction;
-    data.category = Transaciton_1.Categories.BET;
-    data.status = Bet_1.Bet_Status.ACTIVE;
-    try {
-        yield transaction_1.betSchema.validateAsync(data);
-        yield (0, transaction_2.haveEnoughtMoney)(data);
-        return yield (0, bet_1.handlerUserBet)(event_id, bet_option, data);
-        ;
-    }
-    catch (err) {
-        logger.error(err);
-        return (0, handlerError_1.handlerError)(err, h);
-    }
+    const bets = req.payload.bets;
+    const result = bets.map((bet) => __awaiter(void 0, void 0, void 0, function* () {
+        const { event_id, bet_option } = bet;
+        const data = bet;
+        data.user_id = req.pre.auth.user.id;
+        data.category = Transaciton_1.Categories.BET;
+        try {
+            yield bet_2.doAbetSchema.validateAsync(data);
+            const amount = yield (0, transaction_2.haveEnoughtMoney)(data);
+            if (amount - bet.amount >= 0) {
+                return yield (0, bet_1.handlerUserBet)(event_id, bet_option, data);
+            }
+            else {
+                return errors_1.ERROR_NO_MONEY;
+            }
+        }
+        catch (err) {
+            logger.error(err);
+            return err;
+        }
+    }));
+    return result;
 });
 exports.betEvent = betEvent;
 const getTransacions = (req, h) => __awaiter(void 0, void 0, void 0, function* () {
-    const { id, filters } = req.params;
+    const { filters } = req.query;
+    const id = req.query.user_id;
     try {
         if (!id)
             throw errors_1.ERR_ID;
@@ -182,7 +195,7 @@ const getTransacions = (req, h) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.getTransacions = getTransacions;
 const getBalance = (req, h) => __awaiter(void 0, void 0, void 0, function* () {
-    const { user_id } = req.params;
+    const user_id = req.pre.auth.user.id;
     try {
         const amount = yield (0, transaction_2.getAmountByTransaccions)(user_id);
         return `The balance about your account is ${amount}$ `;
